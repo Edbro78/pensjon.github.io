@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huskeregler pensjon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Bruker Inter font som standard */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Legger til litt ekstra stil for inputfelt og knapper */
+        input[type="number"] {
+            -moz-appearance: textfield; /* Fjerner spinnere i Firefox */
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none; /* Fjerner spinnere i Chrome, Safari, Edge, Opera */
+            margin: 0;
+        }
+        /* Sørger for at resultat-teksten er lett å lese */
+        #resultat-område p {
+            margin-bottom: 0.5rem; /* Legger til litt luft mellom resultatlinjene */
+        }
+         /* Sørger for at feilmelding er tydelig */
+        #melding-område {
+            min-height: 1.5rem; /* Gir litt plass selv når det ikke er melding */
+        }
+        /* Styling for knapper */
+        .btn {
+            @apply font-semibold py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition duration-150 ease-in-out text-sm;
+        }
+        .btn-primary {
+            @apply bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400;
+        }
+    </style>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Huskeregler pensjon</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="fodselsaar" class="block text-sm font-medium text-gray-700 mb-1">Fødselsår:</label>
+                <input type="number" id="fodselsaar" placeholder="f.eks. 1980" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="pensjonsalder" class="block text-sm font-medium text-gray-700 mb-1">Ønsket pensjonsalder:</label>
+                <input type="number" id="pensjonsalder" placeholder="f.eks. 67" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="forventet_pensjon_prosent" class="block text-sm font-medium text-gray-700 mb-1">Forventet pensjon (%):</label>
+                <input type="number" id="forventet_pensjon_prosent" min="0" max="100" placeholder="f.eks. 50" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="onsket_inntekt_prosent" class="block text-sm font-medium text-gray-700 mb-1">Ønsket inntekt (%):</label>
+                <input type="number" id="onsket_inntekt_prosent" min="0" max="100" placeholder="f.eks. 80" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="siste_lonn" class="block text-sm font-medium text-gray-700 mb-1">Forventet siste årslønn (NOK):</label>
+                <input type="number" id="siste_lonn" placeholder="f.eks. 800000" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="eksisterende_sparing" class="block text-sm font-medium text-gray-700 mb-1">Eksisterende sparing (NOK):</label>
+                <input type="number" id="eksisterende_sparing" placeholder="f.eks. 100000" value="0" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="md:col-span-2">
+                <label for="arlig_avkastning" class="block text-sm font-medium text-gray-700 mb-1">Forventet årlig avkastning (%):</label>
+                <input type="number" id="arlig_avkastning" placeholder="f.eks. 5" value="5" step="0.1" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+        </div>
+
+        <div class="text-center mb-6 flex justify-center gap-4">
+            <button id="beregn-knapp" class="btn btn-primary">
+                Beregn sparing
+            </button>
+             <button id="nullstill-knapp" type="button" class="btn btn-secondary">
+                Nullstill
+            </button>
+        </div>
+
+         <div id="melding-område" class="text-center text-red-600 font-medium mb-4"></div>
+
+        <div id="resultat-område" class="bg-gray-50 p-4 rounded-md border border-gray-200 hidden">
+             <h2 class="text-xl font-semibold text-gray-800 mb-3">Resultater:</h2>
+             </div>
+
+         <div class="mt-6 text-xs text-gray-500 text-center">
+             <p>Beregningen forutsetter oppgitt årlig rente på sparingen og at kapitalbehovet skal dekke et inntektsgap i 15 år etter pensjonsstart. Skatt og inflasjon er ikke hensyntatt.</p>
+         </div>
+    </div>
+
+    <script>
+        // Henter referanser til HTML-elementer
+        const fodselsaarInput = document.getElementById('fodselsaar');
+        const pensjonsalderInput = document.getElementById('pensjonsalder');
+        const forventetPensjonProsentInput = document.getElementById('forventet_pensjon_prosent');
+        const onsketInntektProsentInput = document.getElementById('onsket_inntekt_prosent');
+        const sisteLonnInput = document.getElementById('siste_lonn');
+        const eksisterendeSparingInput = document.getElementById('eksisterende_sparing');
+        const arligAvkastningInput = document.getElementById('arlig_avkastning');
+        const beregnKnapp = document.getElementById('beregn-knapp');
+        const nullstillKnapp = document.getElementById('nullstill-knapp'); // Nullstill-knapp
+        const resultatOmraade = document.getElementById('resultat-område');
+        const meldingOmraade = document.getElementById('melding-område');
+        const formInputs = document.querySelectorAll('.form-input'); // For nullstilling
+
+        // Formaterer for norske kroner
+        const nokFormatter = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        // Formaterer tall med én desimal
+        const decimalFormatter = new Intl.NumberFormat('nb-NO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+        // Legger til lyttere på knappene
+        beregnKnapp.addEventListener('click', beregnSparing);
+        nullstillKnapp.addEventListener('click', nullstillSkjema); // Lytter for nullstill
+
+        // Funksjon for å nullstille skjemaet
+        function nullstillSkjema() {
+             formInputs.forEach(input => {
+                 if (input.id === 'eksisterende_sparing') input.value = '0';
+                 else if (input.id === 'arlig_avkastning') input.value = '5';
+                 else input.value = '';
+             });
+             resultatOmraade.innerHTML = '<h2 class="text-xl font-semibold text-gray-800 mb-3">Resultater:</h2>';
+             resultatOmraade.classList.add('hidden');
+             meldingOmraade.textContent = '';
+             fodselsaarInput.focus();
+        }
+
+        // Hjelpefunksjon for å lage en resultatlinje (enkel p-tag)
+        function createResultParagraph(label, value) {
+             // Bruker en span for å kunne style verdien om ønskelig
+            return `<p>${label}: <span class="font-semibold">${value}</span></p>`;
+        }
+
+        function beregnSparing() {
+            // Nullstill
+            resultatOmraade.innerHTML = '<h2 class="text-xl font-semibold text-gray-800 mb-3">Resultater:</h2>';
+            resultatOmraade.classList.add('hidden');
+            meldingOmraade.textContent = '';
+
+            // Hent verdier
+            const fodselsaar = parseInt(fodselsaarInput.value);
+            const pensjonsalder = parseInt(pensjonsalderInput.value);
+            const forventetPensjonProsent = parseFloat(forventetPensjonProsentInput.value);
+            const onsketInntektProsent = parseFloat(onsketInntektProsentInput.value);
+            const sisteLonn = parseFloat(sisteLonnInput.value);
+            const eksisterendeSparing = parseFloat(eksisterendeSparingInput.value) || 0;
+            const arligAvkastningProsent = parseFloat(arligAvkastningInput.value);
+
+            // Validering
+            let isValid = true;
+            let feilmeldinger = [];
+            if (isNaN(fodselsaar) || fodselsaar < 1920 || fodselsaar > new Date().getFullYear()) { feilmeldinger.push("Ugyldig fødselsår."); isValid = false; }
+            if (isNaN(pensjonsalder) || pensjonsalder < 50 || pensjonsalder > 100) { feilmeldinger.push("Ugyldig pensjonsalder (50-100)."); isValid = false; }
+            if (isNaN(forventetPensjonProsent) || forventetPensjonProsent < 0 || forventetPensjonProsent > 100) { feilmeldinger.push("Ugyldig forventet pensjon % (0-100)."); isValid = false; }
+            if (isNaN(onsketInntektProsent) || onsketInntektProsent < 0 || onsketInntektProsent > 100) { feilmeldinger.push("Ugyldig ønsket inntekt % (0-100)."); isValid = false; }
+            if (isNaN(sisteLonn) || sisteLonn <= 0) { feilmeldinger.push("Ugyldig siste årslønn."); isValid = false; }
+            if (isNaN(eksisterendeSparing) || eksisterendeSparing < 0) { feilmeldinger.push("Ugyldig eksisterende sparing (>= 0)."); isValid = false; }
+            if (isNaN(arligAvkastningProsent) || arligAvkastningProsent < -20 || arligAvkastningProsent > 50) { feilmeldinger.push("Ugyldig årlig avkastning % (-20 til 50)."); isValid = false; }
+
+            if (!isValid) {
+                meldingOmraade.textContent = feilmeldinger.join(' '); // Viser feilmeldinger på en linje
+                return;
+            }
+
+            // Beregninger
+            const pensjonsaar = fodselsaar + pensjonsalder;
+            const nåværendeÅr = new Date().getFullYear();
+            const årTilPensjon = pensjonsaar - nåværendeÅr;
+
+            if (årTilPensjon <= 0) {
+                meldingOmraade.textContent = `Beregnet pensjonsår (${pensjonsaar}) er nå eller har passert.`;
+                return;
+            }
+
+            const månederTilPensjon = årTilPensjon * 12;
+            const gapProsent = onsketInntektProsent - forventetPensjonProsent;
+
+            // Bygg opp resultat-HTML (bruker nå p-tags)
+            let resultatHTML = '';
+            resultatHTML += createResultParagraph("Beregnet pensjonsår", pensjonsaar);
+            resultatHTML += createResultParagraph("Antall år til pensjon", `${årTilPensjon} (${månederTilPensjon} mnd)`);
+
+            if (gapProsent <= 0) {
+                 resultatHTML += `<p class="mt-4 text-green-700 font-medium">Basert på dine tall, er forventet pensjon lik eller høyere enn ønsket inntekt. Ingen ekstra sparing er nødvendig for å dekke et gap.</p>`;
+            } else {
+                const årligGapNOK = (gapProsent / 100) * sisteLonn;
+                const totalKapitalbehov = årligGapNOK * 15;
+
+                const årligRente = arligAvkastningProsent / 100.0;
+                const månedligRente = årligRente / 12;
+
+                let fremtidigVerdiEksisterendeSparing = eksisterendeSparing;
+                if (eksisterendeSparing > 0 && månederTilPensjon > 0 && månedligRente !== 0) {
+                    fremtidigVerdiEksisterendeSparing = eksisterendeSparing * Math.pow(1 + månedligRente, månederTilPensjon);
+                }
+
+                const gjenståendeKapitalbehov = Math.max(0, totalKapitalbehov - fremtidigVerdiEksisterendeSparing);
+
+                let månedligSparerate = 0;
+                if (gjenståendeKapitalbehov > 0 && månederTilPensjon > 0) {
+                    if (månedligRente !== 0) {
+                        månedligSparerate = gjenståendeKapitalbehov * (månedligRente / (Math.pow(1 + månedligRente, månederTilPensjon) - 1));
+                    } else {
+                        månedligSparerate = gjenståendeKapitalbehov / månederTilPensjon;
+                    }
+                }
+
+                // Legg til detaljerte resultater
+                resultatHTML += createResultParagraph("Totalt kapitalbehov (15 år)", nokFormatter.format(totalKapitalbehov));
+                if (eksisterendeSparing > 0) {
+                     resultatHTML += createResultParagraph("Verdi av eks. sparing v/pensjon", nokFormatter.format(fremtidigVerdiEksisterendeSparing));
+                     resultatHTML += createResultParagraph("Gjenstående kapitalbehov", nokFormatter.format(gjenståendeKapitalbehov));
+                }
+
+                if (gjenståendeKapitalbehov <= 0 && eksisterendeSparing > 0) {
+                     resultatHTML += `<p class="mt-4 text-green-700 font-medium">Din eksisterende sparing dekker behovet.</p>`;
+                } else {
+                     // Hovedresultat - Månedlig sparing (mer fremtredende)
+                     resultatHTML += `<p class="text-lg font-bold text-indigo-700 mt-3">Månedlig sparing nødvendig: <span class="font-bold">${nokFormatter.format(månedligSparerate)}</span></p>`;
+                }
+
+                // Tommelfingerregel
+                const tommelfingerregelÅr = sisteLonn > 0 ? totalKapitalbehov / sisteLonn : 0;
+                resultatHTML += `<p class="mt-4 pt-3 border-t border-gray-200 text-sm">Tommelfingerregel: Kapitalbehovet tilsvarer ca. <span class="font-semibold">${decimalFormatter.format(tommelfingerregelÅr)}</span> siste årslønner.</p>`;
+            }
+
+            // Sett inn resultat-HTML og vis boksen
+            // Legger til resultatHTML etter H2-elementet
+            resultatOmraade.innerHTML += resultatHTML;
+            resultatOmraade.classList.remove('hidden');
+        }
+
+    </script>
+
+</body>
+</html>
