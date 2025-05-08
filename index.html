@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Huskeregler pensjon</title>
+    <title>Beregning av pensjonsgap - behov for sparing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,12 +34,13 @@
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15), 0 6px 15px rgba(0, 0, 0, 0.08);
         }
         h1 {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 2.5rem;
+            font-weight: 800;
             color: #1e293b;
             text-align: center;
             margin-bottom: 2rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.025em;
         }
         .form-input {
             background: #f8fafc;
@@ -125,11 +126,45 @@
             margin-top: 2rem;
             opacity: 0.9;
         }
+        .info-box {
+            font-size: 0.75rem;
+            color: #64748b;
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+            border: 1px solid #e5e7eb;
+            display: none;
+            position: absolute;
+            z-index: 10;
+            width: 100%;
+            max-width: 300px;
+        }
+        .info-icon {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            line-height: 1rem;
+            text-align: center;
+            background: #64748b;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+        .info-icon:hover + .info-box, .info-box:hover {
+            display: block;
+        }
+        .input-container {
+            position: relative;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Huskeregler pensjon</h1>
+        <h1>Beregning av pensjonsgap - behov for sparing</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
@@ -140,9 +175,11 @@
                 <label for="pensjonsalder">Ønsket pensjonsalder:</label>
                 <input type="number" id="pensjonsalder" placeholder="f.eks. 67" class="form-input">
             </div>
-            <div>
+            <div class="input-container">
                 <label for="forventet_pensjon_prosent">Forventet pensjon (%):</label>
                 <input type="number" id="forventet_pensjon_prosent" min="0" max="100" placeholder="f.eks. 50" class="form-input">
+                <span class="info-icon">i</span>
+                <div class="info-box">Forventet pensjon kan du finne hos norskpensjon.no eller ved å snakke med en pensjonsrådgiver</div>
             </div>
             <div>
                 <label for="onsket_inntekt_prosent">Ønsket inntekt (%):</label>
@@ -152,13 +189,11 @@
                 <label for="siste_lonn">Forventet siste årslønn (NOK):</label>
                 <input type="number" id="siste_lonn" placeholder="f.eks. 800000" class="form-input">
             </div>
-            <div>
-                <label for="eksisterende_sparing">Eksisterende sparing (NOK):</label>
-                <input type="number" id="eksisterende_sparing" placeholder="f.eks. 100000" value="0" class="form-input">
-            </div>
-            <div class="md:col-span-2">
+            <div class="md:col-span-2 input-container">
                 <label for="arlig_avkastning">Forventet årlig avkastning (%):</label>
                 <input type="number" id="arlig_avkastning" placeholder="f.eks. 5" value="5" step="0.1" class="form-input">
+                <span class="info-icon">i</span>
+                <div class="info-box">Forventet avkastning er lav med lav aksjeandel, og høy ved høy aksjeandel</div>
             </div>
         </div>
 
@@ -184,7 +219,6 @@
         const forventetPensjonProsentInput = document.getElementById('forventet_pensjon_prosent');
         const onsketInntektProsentInput = document.getElementById('onsket_inntekt_prosent');
         const sisteLonnInput = document.getElementById('siste_lonn');
-        const eksisterendeSparingInput = document.getElementById('eksisterende_sparing');
         const arligAvkastningInput = document.getElementById('arlig_avkastning');
         const beregnKnapp = document.getElementById('beregn-knapp');
         const nullstillKnapp = document.getElementById('nullstill-knapp');
@@ -200,8 +234,7 @@
 
         function nullstillSkjema() {
             formInputs.forEach(input => {
-                if (input.id === 'eksisterende_sparing') input.value = '0';
-                else if (input.id === 'arlig_avkastning') input.value = '5';
+                if (input.id === 'arlig_avkastning') input.value = '5';
                 else input.value = '';
             });
             resultatOmraade.innerHTML = '<h2 class="text-xl font-semibold text-gray-800 mb-3">Resultater:</h2>';
@@ -224,7 +257,6 @@
             const forventetPensjonProsent = parseFloat(forventetPensjonProsentInput.value);
             const onsketInntektProsent = parseFloat(onsketInntektProsentInput.value);
             const sisteLonn = parseFloat(sisteLonnInput.value);
-            const eksisterendeSparing = parseFloat(eksisterendeSparingInput.value) || 0;
             const arligAvkastningProsent = parseFloat(arligAvkastningInput.value);
 
             let isValid = true;
@@ -234,7 +266,6 @@
             if (isNaN(forventetPensjonProsent) || forventetPensjonProsent < 0 || forventetPensjonProsent > 100) { feilmeldinger.push("Ugyldig forventet pensjon % (0-100)."); isValid = false; }
             if (isNaN(onsketInntektProsent) || onsketInntektProsent < 0 || onsketInntektProsent > 100) { feilmeldinger.push("Ugyldig ønsket inntekt % (0-100)."); isValid = false; }
             if (isNaN(sisteLonn) || sisteLonn <= 0) { feilmeldinger.push("Ugyldig siste årslønn."); isValid = false; }
-            if (isNaN(eksisterendeSparing) || eksisterendeSparing < 0) { feilmeldinger.push("Ugyldig eksisterende sparing (>= 0)."); isValid = false; }
             if (isNaN(arligAvkastningProsent) || arligAvkastningProsent < -20 || arligAvkastningProsent > 50) { feilmeldinger.push("Ugyldig årlig avkastning % (-20 til 50)."); isValid = false; }
 
             if (!isValid) {
@@ -267,36 +298,31 @@
                 const årligRente = arligAvkastningProsent / 100.0;
                 const månedligRente = årligRente / 12;
 
-                let fremtidigVerdiEksisterendeSparing = eksisterendeSparing;
-                if (eksisterendeSparing > 0 && månederTilPensjon > 0 && månedligRente !== 0) {
-                    fremtidigVerdiEksisterendeSparing = eksisterendeSparing * Math.pow(1 + månedligRente, månederTilPensjon);
+                let månedligSparerate = 0;
+                if (totalKapitalbehov > 0 && månederTilPensjon > 0) {
+                    if (månedligRente !== 0) {
+                        månedligSparerate = totalKapitalbehov * (månedligRente / (Math.pow(1 + månedligRente, månederTilPensjon) - 1));
+                    } else {
+                        månedligSparerate = totalKapitalbehov / månederTilPensjon;
+                    }
                 }
 
-                const gjenståendeKapitalbehov = Math.max(0, totalKapitalbehov - fremtidigVerdiEksisterendeSparing);
-
-                let månedligSparerate = 0;
-                if (gjenståendeKapitalbehov > 0 && månederTilPensjon > 0) {
-                    if (månedligRente !== 0) {
-                        månedligSparerate = gjenståendeKapitalbehov * (månedligRente / (Math.pow(1 + månedligRente, månederTilPensjon) - 1));
+                let engangsInvestering = 0;
+                if (totalKapitalbehov > 0 && årTilPensjon > 0) {
+                    if (årligRente !== 0) {
+                        engangsInvestering = totalKapitalbehov / Math.pow(1 + årligRente, årTilPensjon);
                     } else {
-                        månedligSparerate = gjenståendeKapitalbehov / månederTilPensjon;
+                        engangsInvestering = totalKapitalbehov;
                     }
                 }
 
                 resultatHTML += createResultParagraph("Totalt kapitalbehov (15 år)", nokFormatter.format(totalKapitalbehov));
-                if (eksisterendeSparing > 0) {
-                    resultatHTML += createResultParagraph("Verdi av eks. sparing v/pensjon", nokFormatter.format(fremtidigVerdiEksisterendeSparing));
-                    resultatHTML += createResultParagraph("Gjenstående kapitalbehov", nokFormatter.format(gjenståendeKapitalbehov));
-                }
-
-                if (gjenståendeKapitalbehov <= 0 && eksisterendeSparing > 0) {
-                    resultatHTML += `<p class="mt-4 text-green-700 font-medium">Din eksisterende sparing dekker behovet.</p>`;
-                } else {
-                    resultatHTML += `<p class="text-lg font-bold text-indigo-700 mt-3">Månedlig sparing nødvendig: <span class="font-bold">${nokFormatter.format(månedligSparerate)}</span></p>`;
-                }
+                resultatHTML += `<p class="text-lg font-bold text-indigo-700 mt-3">Månedlig sparing nødvendig: <span class="font-bold">${nokFormatter.format(månedligSparerate)}</span></p>`;
+                resultatHTML += `<p class="text-lg font-bold text-indigo-700 mt-3">Alternativ engangsinvestering i dag: <span class="font-bold">${nokFormatter.format(engangsInvestering)}</span></p>`;
 
                 const tommelfingerregelÅr = sisteLonn > 0 ? totalKapitalbehov / sisteLonn : 0;
-                resultatHTML += `<p class="mt-4 pt-3 border-t border-gray-200 text-sm">Tommelfingerregel: Kapitalbehovet tilsvarer ca. <span class="font-semibold">${decimalFormatter.format(tommelfingerregelÅr)}</span> siste årslønner.</p>`;
+                const tommelfingerregelNOK = totalKapitalbehov;
+                resultatHTML += `<p class="mt-4 pt-3 border-t border-gray-200 text-sm">Tommelfingerregel: Kapitalbehovet tilsvarer ca. <span class="font-semibold">${decimalFormatter.format(tommelfingerregelÅr)}</span> siste årslønner eller <span class="font-semibold">${nokFormatter.format(tommelfingerregelNOK)}</span> (basert på siste årslønn på ${nokFormatter.format(sisteLonn)}).</p>`;
             }
 
             resultatOmraade.innerHTML += resultatHTML;
