@@ -57,6 +57,10 @@
             outline: none;
             box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.7), 0 0 0 3px rgba(79, 70, 229, 0.3);
         }
+        .form-input[readonly] {
+            background: #e5e7eb;
+            cursor: not-allowed;
+        }
         input[type="number"] {
             -moz-appearance: textfield;
         }
@@ -186,8 +190,12 @@
                 <input type="number" id="onsket_inntekt_prosent" min="0" max="100" placeholder="f.eks. 80" class="form-input">
             </div>
             <div>
-                <label for="siste_lonn">Forventet siste årslønn (NOK):</label>
-                <input type="number" id="siste_lonn" placeholder="f.eks. 800000" class="form-input">
+                <label for="dagens_lonn">Dagens årslønn (NOK):</label>
+                <input type="number" id="dagens_lonn" placeholder="f.eks. 500000" class="form-input">
+            </div>
+            <div>
+                <label id="forventet_lonn_label" for="forventet_lonn">Forventet årslønn i år <span id="pensjonsaar_label"></span> (NOK):</label>
+                <input type="number" id="forventet_lonn" readonly class="form-input" placeholder="Beregnes automatisk">
             </div>
             <div class="md:col-span-2 input-container">
                 <label for="arlig_avkastning">Forventet årlig avkastning (%):</label>
@@ -218,7 +226,9 @@
         const pensjonsalderInput = document.getElementById('pensjonsalder');
         const forventetPensjonProsentInput = document.getElementById('forventet_pensjon_prosent');
         const onsketInntektProsentInput = document.getElementById('onsket_inntekt_prosent');
-        const sisteLonnInput = document.getElementById('siste_lonn');
+        const dagensLonnInput = document.getElementById('dagens_lonn');
+        const forventetLonnInput = document.getElementById('forventet_lonn');
+        const pensjonsaarLabel = document.getElementById('pensjonsaar_label');
         const arligAvkastningInput = document.getElementById('arlig_avkastning');
         const beregnKnapp = document.getElementById('beregn-knapp');
         const nullstillKnapp = document.getElementById('nullstill-knapp');
@@ -237,6 +247,8 @@
                 if (input.id === 'arlig_avkastning') input.value = '5';
                 else input.value = '';
             });
+            pensjonsaarLabel.textContent = '';
+            forventetLonnInput.value = '';
             resultatOmraade.innerHTML = '<h2 class="text-xl font-semibold text-gray-800 mb-3">Resultater:</h2>';
             resultatOmraade.classList.add('hidden');
             meldingOmraade.textContent = '';
@@ -256,7 +268,7 @@
             const pensjonsalder = parseInt(pensjonsalderInput.value);
             const forventetPensjonProsent = parseFloat(forventetPensjonProsentInput.value);
             const onsketInntektProsent = parseFloat(onsketInntektProsentInput.value);
-            const sisteLonn = parseFloat(sisteLonnInput.value);
+            const dagensLonn = parseFloat(dagensLonnInput.value);
             const arligAvkastningProsent = parseFloat(arligAvkastningInput.value);
 
             let isValid = true;
@@ -265,7 +277,7 @@
             if (isNaN(pensjonsalder) || pensjonsalder < 50 || pensjonsalder > 100) { feilmeldinger.push("Ugyldig pensjonsalder (50-100)."); isValid = false; }
             if (isNaN(forventetPensjonProsent) || forventetPensjonProsent < 0 || forventetPensjonProsent > 100) { feilmeldinger.push("Ugyldig forventet pensjon % (0-100)."); isValid = false; }
             if (isNaN(onsketInntektProsent) || onsketInntektProsent < 0 || onsketInntektProsent > 100) { feilmeldinger.push("Ugyldig ønsket inntekt % (0-100)."); isValid = false; }
-            if (isNaN(sisteLonn) || sisteLonn <= 0) { feilmeldinger.push("Ugyldig siste årslønn."); isValid = false; }
+            if (isNaN(dagensLonn) || dagensLonn <= 0) { feilmeldinger.push("Ugyldig dagens årslønn."); isValid = false; }
             if (isNaN(arligAvkastningProsent) || arligAvkastningProsent < -20 || arligAvkastningProsent > 50) { feilmeldinger.push("Ugyldig årlig avkastning % (-20 til 50)."); isValid = false; }
 
             if (!isValid) {
@@ -282,17 +294,24 @@
                 return;
             }
 
+            // Beregn forventet årslønn ved pensjon (4% årlig økning)
+            const årligLønnØkning = 0.04;
+            const forventetLonn = dagensLonn * Math.pow(1 + årligLønnØkning, årTilPensjon);
+            forventetLonnInput.value = Math.round(forventetLonn);
+            pensjonsaarLabel.textContent = pensjonsaar;
+
             const månederTilPensjon = årTilPensjon * 12;
             const gapProsent = onsketInntektProsent - forventetPensjonProsent;
 
             let resultatHTML = '';
             resultatHTML += createResultParagraph("Beregnet pensjonsår", pensjonsaar);
             resultatHTML += createResultParagraph("Antall år til pensjon", `${årTilPensjon} (${månederTilPensjon} mnd)`);
+            resultatHTML += createResultParagraph("Forventet årslønn ved pensjon", nokFormatter.format(forventetLonn));
 
             if (gapProsent <= 0) {
                 resultatHTML += `<p class="mt-4 text-green-700 font-medium">Basert på dine tall, er forventet pensjon lik eller høyere enn ønsket inntekt. Ingen ekstra sparing er nødvendig for å dekke et gap.</p>`;
             } else {
-                const årligGapNOK = (gapProsent / 100) * sisteLonn;
+                const årligGapNOK = (gapProsent / 100) * forventetLonn;
                 const totalKapitalbehov = årligGapNOK * 15;
 
                 const årligRente = arligAvkastningProsent / 100.0;
@@ -320,9 +339,9 @@
                 resultatHTML += `<p class="text-lg font-bold text-indigo-700 mt-3">Månedlig sparing nødvendig: <span class="font-bold">${nokFormatter.format(månedligSparerate)}</span></p>`;
                 resultatHTML += `<p class="text-lg font-bold text-indigo-700 mt-3">Alternativ engangsinvestering i dag: <span class="font-bold">${nokFormatter.format(engangsInvestering)}</span></p>`;
 
-                const tommelfingerregelÅr = sisteLonn > 0 ? totalKapitalbehov / sisteLonn : 0;
+                const tommelfingerregelÅr = forventetLonn > 0 ? totalKapitalbehov / forventetLonn : 0;
                 const tommelfingerregelNOK = totalKapitalbehov;
-                resultatHTML += `<p class="mt-4 pt-3 border-t border-gray-200 text-sm">Tommelfingerregel: Kapitalbehovet tilsvarer ca. <span class="font-semibold">${decimalFormatter.format(tommelfingerregelÅr)}</span> siste årslønner eller <span class="font-semibold">${nokFormatter.format(tommelfingerregelNOK)}</span> (basert på siste årslønn på ${nokFormatter.format(sisteLonn)}).</p>`;
+                resultatHTML += `<p class="mt-4 pt-3 border-t border-gray-200 text-sm">Tommelfingerregel: Kapitalbehovet tilsvarer ca. <span class="font-semibold">${decimalFormatter.format(tommelfingerregelÅr)}</span> siste årslønner eller <span class="font-semibold">${nokFormatter.format(tommelfingerregelNOK)}</span> (basert på forventet årslønn ved pensjon på ${nokFormatter.format(forventetLonn)}).</p>`;
             }
 
             resultatOmraade.innerHTML += resultatHTML;
